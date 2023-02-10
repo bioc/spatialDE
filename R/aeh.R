@@ -35,9 +35,9 @@
 #' spatial patterns.
 #'
 #' @examples
-#' ## Mock up a SpatialExperiment object wit 100 cells, 200 genes
+#' ## Mock up a SpatialExperiment object wit 100 cells and 3 genes
 #' set.seed(42)
-#' spe <- mockSVG(size = 10, tot_genes = 200, de_genes = 20, return_SPE = TRUE)
+#' spe <- mockSVG(size = 10, tot_genes = 3, de_genes = 1, return_SPE = TRUE)
 #'
 #' ## Run spatialDE
 #' de_results <- spatialDE(spe)
@@ -83,7 +83,7 @@ NULL
             de_results = de_results, qval_thresh = qval_thresh
         )
     }
-    
+
     sample_info <- data.frame(coordinates, total_counts = colSums(x))
     .run_spatial_patterns(x, sample_info, de_results, n_patterns, length,
                           verbose = FALSE)
@@ -93,36 +93,36 @@ NULL
 .run_spatial_patterns <- function(x, sample_info, de_results,
                                   n_patterns, length,
                                   verbose = FALSE) {
-    
+
     proc <- basiliskStart(spatialDE_env, testload="scipy.optimize")
-    
+
     # Normalization
     ## Stabilize
     .naiveDE_stabilize(proc, x)
     stabilized <- basiliskRun(proc, function(store) {
         as.matrix(store$stabilized)
     }, persist=TRUE)
-    
+
     ## Regress_out
     .naiveDE_regress_out(proc, stabilized, sample_info)
     regressed <- basiliskRun(proc, function(store) {
         as.matrix(store$regressed)
     }, persist=TRUE)
-    
+
     coordinates <- sample_info[, c("x", "y")]
-    
+
     .importPyModule(proc, !verbose, .set_fake_tqdm, .set_real_tqdm)
     .spatialDE_spatial_patterns(
-        proc = proc, 
+        proc = proc,
         x = regressed, coordinates = coordinates,
         de_results = de_results, n_patterns = n_patterns,
         length = length
     )
-    
+
     out <- basiliskRun(proc, function(store) {
         store$spatial_pattern
     }, persist=TRUE)
-    
+
     out
 }
 

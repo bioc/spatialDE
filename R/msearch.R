@@ -26,9 +26,9 @@
 #' @return `data.frame` of model_search results.
 #'
 #' @examples
-#' ## Mock up a SpatialExperiment object wit 100 cells, 200 genes
+#' ## Mock up a SpatialExperiment object wit 400 cells and 3 genes
 #' set.seed(42)
-#' spe <- mockSVG(size = 10, tot_genes = 200, de_genes = 20, return_SPE = TRUE)
+#' spe <- mockSVG(size = 20, tot_genes = 3, de_genes = 1, return_SPE = TRUE)
 #'
 #' ## Run spatialDE with S4 integration
 #' de_results <- spatialDE(spe)
@@ -70,7 +70,7 @@ NULL
     }
 
     sample_info <- data.frame(coordinates, total_counts = colSums(x))
-    
+
     .run_model_search(x = x, sample_info = sample_info, de_results = de_results,
         verbose = verbose
     )
@@ -78,14 +78,14 @@ NULL
 
 .run_model_search <- function(x, sample_info, de_results, verbose = FALSE) {
     proc <- basiliskStart(spatialDE_env, testload="scipy.optimize")
-    
+
     # Normalization
     ## Stabilize
     .naiveDE_stabilize(proc, x)
     stabilized <- basiliskRun(proc, function(store) {
         as.matrix(store$stabilized)
     }, persist=TRUE)
-    
+
     ## Regress_out
     .naiveDE_regress_out(proc, stabilized, sample_info)
     regressed <- basiliskRun(proc, function(store) {
@@ -95,11 +95,11 @@ NULL
     coordinates <- sample_info[, c("x", "y")]
     .importPyModule(proc, !verbose, .set_fake_tqdm, .set_real_tqdm)
     .spatialDE_model_search(proc, regressed, coordinates, de_results)
-    
+
     out <- basiliskRun(proc, function(store) {
         store$model_search
     }, persist=TRUE)
-    
+
     out
 }
 
