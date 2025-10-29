@@ -1,6 +1,6 @@
 Package: spatialDE
 Title: R wrapper for SpatialDE
-Version: 1.16.0
+Version: 1.17.0
 Authors@R: c(
     person("Davide", "Corso", role = "aut",
            email = "davidecrs92@gmail.com",
